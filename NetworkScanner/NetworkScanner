@@ -1,0 +1,41 @@
+from argparse import ArgumentParser
+from scapy.all import ARP, Ether, srp
+
+#before running---> Terminal--> nmap --> install scapy
+
+parser = ArgumentParser(
+    prog='Network Scanner'
+    description='A network scanner that uses arp requests.'
+    epilog='wooo'
+)
+#add help menu
+parser.add_argument('-t', "--target", help="Use syntax -t to specify your target address. IP must be in CIDR Notation (192.168.10 22 bit netork--->192.168.10/22)", required=True)
+
+#parse command line args
+args = parser.parse_args()
+
+#change args to target ip
+target_ip = args.target
+
+#create arp packet
+arp = ARP(pdst=target_ip)
+
+#create ether packet
+ether = Ether(dst= 'ff:ff:ff:ff:ff:ff')
+
+#stack both together
+packet = ether/arp
+
+result = srp(packet, timeout=3, verbose=0) [0]
+
+clients = []
+
+for sent, recieved in result:
+        #for each response, record ip and mac address in list
+    clients.append({'ip': recieved.psrc, 'mac': recieved.hwsrc})
+
+    #print clinets
+    print("Available devices in the network:")
+    print("IP" + " "*18+"MAC")
+    for client in clients:
+        print("{:16}   {}".format(client['ip'], client['mac']))
